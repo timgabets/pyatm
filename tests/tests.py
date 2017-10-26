@@ -8,7 +8,7 @@ class TestParseTraceData(unittest.TestCase):
 
     def test_parce_trace_single_string_data(self):
       data = """13:51:42.580796 -| 31.31.1C.30.30.35.30.30.30.30.30.30.1C.1C.1C.31       11.005000000...1"""
-      self.assertEqual(parce_trace_data(data), b'')
+      self.assertEqual(parce_trace_data(data), b'11\x1c005000000\x1c\x1c\x1c1')
 
     def _test_parce_trace_data_transaction_request(self):
       data = """13:51:42.580796 -| 31.31.1C.30.30.35.30.30.30.30.30.30.1C.1C.1C.31       11.005000000...1
