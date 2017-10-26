@@ -1,2 +1,2 @@
 def parce_trace_data(data):
-	return 0
+	return b''
