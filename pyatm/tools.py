@@ -1,4 +1,4 @@
-from binascii import unhexlify
+import binascii
 
 def parce_trace_data(data):
   parsed = b''
@@ -8,7 +8,10 @@ def parce_trace_data(data):
       if trace_string[0] == ' ':
         i = 0
         while i < 16:
-          parsed += unhexlify(trace_string[3*i+1 : 3*i+3])
+          try:
+            parsed += binascii.unhexlify(trace_string[3*i+1 : 3*i+3])
+          except binascii.Error:
+            break
           i += 1
 
   return parsed
