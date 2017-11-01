@@ -1,4 +1,5 @@
 import binascii
+import re
 
 def parce_trace_data(data):
   parsed = b''
@@ -12,6 +13,19 @@ def parce_trace_data(data):
             parsed += binascii.unhexlify(trace_string[3*i+1 : 3*i+3])
           except binascii.Error:
             break
-          i += 1
-
+          i += 1          
   return parsed
+
+
+def is_atm_message(trace_line):
+  """
+  Detects whether the provided line is ATM message from trace file.
+  ^\d{2}:\d{2}:\d{2}.\d{6} -| [0-9A-F]{2}.*[ ]{7}.
+
+  13:51:42.580796 -| 31.31.1C.30.30.35.30.30.30.30.30.30.1C.1C.1C.31       11.005000000...1
+  """
+
+  if re.match("^\d{2}:\d{2}:\d{2}.\d{6} -| [0-9A-F]{2}.*[ ]{7}.", trace_line):
+    return True
+  else:
+    return False
