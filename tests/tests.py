@@ -1,6 +1,6 @@
 import unittest
 
-from pyatm.tools import parce_trace_data, is_atm_message
+from pyatm.tools import parce_trace_data, is_atm_message, is_start_of_atm_message
 
 class TestParseTraceData(unittest.TestCase):
   def test_parce_trace_data(self):
@@ -50,6 +50,15 @@ class TestParseTraceData(unittest.TestCase):
     self.assertEqual(parce_trace_data(data), b'11\x1c005000000\x1c\x1c\x1c11\x1c;6037991012345674=200310112957407?\x1c\x1cFI  I  A\x1c00000000\x1c1:90?=?0?4205446\x1c\x1c\x1c\x1c25716100000000000000000000')
 
 
+class testIsStartOfATMMessage(unittest.TestCase):
+  def test_is_strart_of_atm_message_empty_data(self):
+    self.assertEqual(is_start_of_atm_message(''), False)
+
+  def test_is_start_of_atm_message_valid_data(self):
+    self.assertEqual(is_start_of_atm_message("""13:51:42.580796 -| 31.31.1C.30.30.35.30.30.30.30.30.30.1C.1C.1C.31       11.005000000...1"""), True)
+    self.assertEqual(is_start_of_atm_message("""13:51:42.580806 -| 31.1C.3B.36.30.33.37.39.39.31.30.31.32.33.34.35       1.;6037991012345"""), False)
+
+
 class TestIsATMMessage(unittest.TestCase):
   def test_is_atm_message_empty_data(self):
     self.assertEqual(is_atm_message(''), False)
@@ -64,9 +73,11 @@ class TestIsATMMessage(unittest.TestCase):
     self.assertEqual(is_atm_message("""13:51:42.580851 -| 36.31.30.30.30.30.30.30.30.30.30.30.30.30.30.30       6100000000000000"""), True)
     self.assertEqual(is_atm_message("""13:51:42.580858 -| 30.30.30.30.30.30                                     000000"""), True)
     self.assertEqual(is_atm_message("""13:51:42.580858 -| 30                                                    0"""), True)
+    self.assertEqual(is_atm_message("""16:51:15.950531 -| E8.03.00.00.00.00.00.00.00.FF.FF.FF.89.B2.01.00       ................"""), True)
 
   def test_is_atm_message_invalid_data(self):
     self.assertEqual(is_atm_message("""16:51:29.803538 -| constructed buffer string"""), False)
+
 
 if __name__ == '__main__':
   unittest.main()
