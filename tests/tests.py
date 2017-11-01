@@ -54,7 +54,7 @@ class TestIsATMMessage(unittest.TestCase):
   def test_is_atm_message_empty_data(self):
     self.assertEqual(is_atm_message(''), False)
 
-  def test_is_atm_message_data(self):
+  def test_is_atm_message_valid_data(self):
     self.assertEqual(is_atm_message("""13:51:42.580796 -| 31.31.1C.30.30.35.30.30.30.30.30.30.1C.1C.1C.31       11.005000000...1"""), True)
     self.assertEqual(is_atm_message("""13:51:42.580806 -| 31.1C.3B.36.30.33.37.39.39.31.30.31.32.33.34.35       1.;6037991012345"""), True)
     self.assertEqual(is_atm_message("""13:51:42.580815 -| 36.37.34.3D.32.30.30.33.31.30.31.31.32.39.35.37       674=200310112957"""), True)
@@ -64,6 +64,9 @@ class TestIsATMMessage(unittest.TestCase):
     self.assertEqual(is_atm_message("""13:51:42.580851 -| 36.31.30.30.30.30.30.30.30.30.30.30.30.30.30.30       6100000000000000"""), True)
     self.assertEqual(is_atm_message("""13:51:42.580858 -| 30.30.30.30.30.30                                     000000"""), True)
     self.assertEqual(is_atm_message("""13:51:42.580858 -| 30                                                    0"""), True)
+
+  def test_is_atm_message_invalid_data(self):
+    self.assertEqual(is_atm_message("""16:51:29.803538 -| constructed buffer string"""), False)
 
 if __name__ == '__main__':
   unittest.main()
