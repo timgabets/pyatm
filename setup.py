@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='pyatm',
-      version='0.1',
+      version='0.2',
       
       description='ATM (Automatic Teller machine) testing library and tools',
       long_description=open('README.rst').read(),

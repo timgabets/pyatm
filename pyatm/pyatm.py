@@ -3,9 +3,10 @@
 import socket
 import struct
 import sys
+import getopt
 
 from time import sleep
-from tools import parce_trace_data
+from tools import parce_trace_data, is_start_of_atm_message, is_atm_message, is_host_message_sent, get_timestamp
 from tracetools.tracetools import trace
 
 class ATM:
@@ -50,87 +51,110 @@ class ATM:
     return data
 
 
+def parse_atm_messages(trace_data):
+  """
+  """
+  splitted = trace_data.split('#---+++=== START MESSAGE LOG ===+++---#')
+
+  atm_messages = []
+  for chunk in splitted:
+    atm_message_found = False
+    message = ''
+
+    lines = chunk.split('\n')
+    for line in lines:
+      if is_start_of_atm_message(line):
+        atm_message_found = True
+        message += line + '\n'
+
+      elif atm_message_found:
+        if is_atm_message(line):
+          message += line + '\n'
+        else:
+          #print(message)
+          atm_messages.append(message)
+          break
+  
+  return atm_messages
+
+
+def parse_host_messages(trace_data):
+  lines = trace_data.split('\n')
+
+  host_messages = []
+  for line in lines:
+    if is_host_message_sent(line):
+      host_messages.append(line)
+
+  return host_messages
+
+
+def parse_trace_file(filename):
+  """
+  Parse trace file and return requests data
+  """
+  f = open(filename, 'r')
+  trace_data = f.read()
+
+  messages = parse_atm_messages(trace_data) + parse_host_messages(trace_data)
+  f.close()
+  messages.sort()
+
+  return messages
+
+
+def show_help(name):
+  """
+
+  """
+  print('Usage: python3 {} [OPTIONS]... '.format(name))
+  print('Dummy ATM message sender')
+  print('  -f, --file=[FILE]\t\tatmi.out trace file to parse')
+  print('  -s, --start=[timestamp]\t(Optional) send messages starting from this timestamp')
+  print('  -e, --end=[timestamp]\t\t(Optional) send messages up to this timestamp')
+  
+
 if __name__ == '__main__':
+  filename = None
+  start_time = None
+  end_time = None
+
+  try:
+    optlist, args = getopt.getopt(sys.argv[1:], 'h:f:s:e:', ['help', 'file=', 'start=', 'end='])
+    for opt, arg in optlist:
+      if opt in ('-h', '--help'):
+        show_help(sys.argv[0])
+        sys.exit()
+      
+      elif opt in ('-s', '--start'):
+        start_time = arg
+
+      elif opt in ('-e', '--end'):
+        end_time = arg
+
+      elif opt in ('-f', '--file'):
+        filename = arg
+    
+  except getopt.GetoptError:
+    show_help(sys.argv[0])
+    sys.exit()
+
+  if not filename:
+    show_help(sys.argv[0])
+    sys.exit()    
+
+  messages = parse_trace_file(filename)
+
   atm = ATM('127.0.0.1', 11032)
-  
-  requests = [ 
-  """13:51:42.580796 -| 31.31.1C.30.30.35.30.30.30.30.30.30.1C.1C.1C.31       11.005000000...1
-  13:51:42.580806 -| 31.1C.3B.36.30.33.37.39.39.31.30.31.32.33.34.35       1.;6037991012345
-  13:51:42.580815 -| 36.37.34.3D.32.30.30.33.31.30.31.31.32.39.35.37       674=200310112957
-  13:51:42.580824 -| 34.30.37.3F.1C.1C.46.49.20.20.49.20.20.41.1C.30       407?..FI  I  A.0
-  13:51:42.580833 -| 30.30.30.30.30.30.30.1C.31.3A.39.30.3F.3D.3F.30       0000000.1:90?=?0
-  13:51:42.580842 -| 3F.34.32.30.35.34.34.36.1C.1C.1C.1C.32.35.37.31       ?4205446....2571
-  13:51:42.580851 -| 36.31.30.30.30.30.30.30.30.30.30.30.30.30.30.30       6100000000000000
-  13:51:42.580858 -| 30.30.30.30.30.30                                     000000 """,
 
-  "wait_response",
+  for item in messages:
+    if start_time and get_timestamp(item) < start_time:
+      continue
 
-  """13:51:44.442984 -| 31.31.1C.30.30.35.30.30.30.30.30.30.1C.1C.1C.31       11.005000000...1
-  13:51:44.442992 -| 32.1C.1C.1C.1C.1C.1C.41.1C                            2......A.""",
+    if end_time and get_timestamp(item) > end_time:
+      break
 
-  "wait_response",
-
-  """13:51:44.898394 -| 32.32.1C.30.30.35.30.30.30.30.30.30.1C.1C.42          22.005000000..B""",
-
-  "sleep",
-
-  """13:51:45.008850 -| 31.31.1C.30.30.35.30.30.30.30.30.30.1C.1C.1C.31       11.005000000...1
-  13:51:45.008861 -| 33.1C.3B.36.30.33.37.39.39.31.30.31.32.33.34.35       3.;6037991012345
-  13:51:45.008877 -| 36.37.34.3D.32.30.30.33.31.30.31.31.32.39.35.37       674=200310112957
-  13:51:45.008887 -| 34.30.37.3F.1C.1C.44.47.20.47.49.20.43.44.1C.30       407?..DG GI CD.0
-  13:51:45.008896 -| 30.30.30.30.30.30.30.1C.31.3A.39.30.3F.3D.3F.30       0000000.1:90?=?0
-  13:51:45.008905 -| 3F.34.32.30.35.34.34.36.1C.41.1C.1C.1C.32.35.37       ?4205446.A...257
-  13:51:45.008914 -| 31.37.31.30.30.30.30.30.30.30.30.30.30.30.30.30       1710000000000000
-  13:51:45.008921 -| 30.30.30.30.30.30.30                                  0000000 """,
-
-  "wait_response",
-
-  """13:51:46.942618 -| 31.31.1C.30.30.35.30.30.30.30.30.30.1C.1C.1C.31       11.005000000...1
-  13:51:46.942625 -| 34.1C.1C.1C.1C.1C.1C.48.1C                            4......H.   """,
-
-  "wait_response",
-
-  """13:51:47.398972 -| 32.32.1C.30.30.35.30.30.30.30.30.30.1C.1C.42          22.005000000..B""",
-
-  """13:51:54.395624 -| 31.31.1C.30.30.35.30.30.30.30.30.30.1C.1C.1C.31       11.005000000...1
-  13:51:54.395633 -| 35.1C.3B.36.30.33.37.39.39.31.30.31.32.33.34.35       5.;6037991012345
-  13:51:54.395642 -| 36.37.34.3D.32.30.30.33.31.30.31.31.32.39.35.37       674=200310112957
-  13:51:54.395651 -| 34.30.37.3F.1C.1C.44.46.20.46.49.20.41.44.1C.30       407?..DF FI AD.0
-  13:51:54.395660 -| 30.30.30.30.30.30.30.1C.31.3A.39.30.3F.3D.3F.30       0000000.1:90?=?0
-  13:51:54.395669 -| 3F.34.32.30.35.34.34.36.1C.48.1C.36.32.35.31.31       ?4205446.H.62511
-  13:51:54.395678 -| 36.1C.1C.32.35.37.31.38.31.30.30.30.30.30.30.30       6..2571810000000
-  13:51:54.395686 -| 30.30.30.30.30.30.30.30.30.30.30.30.30                0000000000000 """,
-
-  "wait_response",
-
-  """13:51:44.898394 -| 32.32.1C.30.30.35.30.30.30.30.30.30.1C.1C.42          22.005000000..B""",
-
-  "sleep",
-
-  """13:52:03.238195 -| 31.31.1C.30.30.35.30.30.30.30.30.30.1C.1C.1C.31       11.005000000...1
-  13:52:03.238204 -| 36.1C.3B.36.30.33.37.39.39.31.30.31.32.33.34.35       6.;6037991012345
-  13:52:03.238213 -| 36.37.34.3D.32.30.30.33.31.30.31.31.32.39.35.37       674=200310112957
-  13:52:03.238222 -| 34.30.37.3F.1C.1C.44.46.20.46.49.20.43.44.1C.30       407?..DF FI CD.0
-  13:52:03.238267 -| 30.30.30.30.30.30.30.1C.31.3A.39.30.3F.3D.3F.30       0000000.1:90?=?0
-  13:52:03.238277 -| 3F.34.32.30.35.34.34.36.1C.48.1C.38.36.30.31.30       ?4205446.H.86010
-  13:52:03.238286 -| 34.1C.1C.32.35.37.31.38.31.30.30.30.30.30.30.30       4..2571810000000
-  13:52:03.238294 -| 30.30.30.30.30.30.30.30.30.30.30.30.30                0000000000000   """,
-
-  "wait_response",
-
-  """13:52:06.926141 -| 31.31.1C.30.30.35.30.30.30.30.30.30.1C.1C.1C.31       11.005000000...1
-  13:52:06.926149 -| 37.1C.1C.1C.1C.1C.1C.43.1C                            7......C.""",
-  
-  "wait_response",
-
-  ]
-
-
-  for item in requests:
-    if item == "sleep":
-      sleep(1)
-    elif item == "wait_response":
+    if is_host_message_sent(item):
       atm.recv()
     else:
       atm.send(parce_trace_data(item))
-

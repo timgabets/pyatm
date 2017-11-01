@@ -47,3 +47,13 @@ def is_host_message_sent(trace_line):
     return True
 
   return False
+
+
+def get_timestamp(line):
+  """
+  returns the timestamp
+  """
+  if line and re.match("^\d{2}:\d{2}:\d{2}.\d{6}", line):
+    return line[0:15]
+
+  return None

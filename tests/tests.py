@@ -1,6 +1,6 @@
 import unittest
 
-from pyatm.tools import parce_trace_data, is_atm_message, is_start_of_atm_message, is_host_message_sent
+from pyatm.tools import parce_trace_data, is_atm_message, is_start_of_atm_message, is_host_message_sent, get_timestamp
 
 class TestParseTraceData(unittest.TestCase):
   def test_parce_trace_data(self):
@@ -91,6 +91,15 @@ class TestIsHostMessageSent(unittest.TestCase):
   def test_is_atm_message_valid_data(self):
     self.assertEqual(is_host_message_sent("""14:35:39.910431 D| msgsnd_w_retry [dst task: COMMSINT, time: 31/10/2017 14:35:39.910]: Send msg to queue 76775432"""), True)
 
+
+class testGetTimestamp(unittest.TestCase):
+  def test_get_timestamp_empty_data(self):
+    self.assertEqual(get_timestamp(''), None)    
+
+  def test_get_timestamp_nonempty_data(self):
+    self.assertEqual(get_timestamp("""14:35:39.910431 D| <- only this format is currently supported"""), "14:35:39.910431")
+    self.assertEqual(get_timestamp("""14:35:39 | <- this format is not supported"""), None)
+    self.assertEqual(get_timestamp("""iddqd"""), None)
 
 if __name__ == '__main__':
   unittest.main()
