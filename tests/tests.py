@@ -1,6 +1,6 @@
 import unittest
 
-from pyatm.tools import parce_trace_data, is_atm_message, is_start_of_atm_message
+from pyatm.tools import parce_trace_data, is_atm_message, is_start_of_atm_message, is_host_message_sent
 
 class TestParseTraceData(unittest.TestCase):
   def test_parce_trace_data(self):
@@ -77,6 +77,19 @@ class TestIsATMMessage(unittest.TestCase):
 
   def test_is_atm_message_invalid_data(self):
     self.assertEqual(is_atm_message("""16:51:29.803538 -| constructed buffer string"""), False)
+
+
+class TestIsHostMessageSent(unittest.TestCase):
+  def test_is_host_message_sent_empty_data(self):
+    self.assertEqual(is_host_message_sent(''), False)  
+
+  def test_is_atm_message_invalid_data(self):
+    self.assertEqual(is_host_message_sent("""13:51:42.580796 -| 31.31.1C.30.30.35.30.30.30.30.30.30.1C.1C.1C.31       11.005000000...1"""), False)
+    self.assertEqual(is_host_message_sent("""14:35:39.910408 -| msgsnd_w_retry [dst task: COMMSINT, time: 31/10/2017 14:35:39.910]: trying to send 253d bytes to target queue 76775432"""), False)
+
+  
+  def test_is_atm_message_valid_data(self):
+    self.assertEqual(is_host_message_sent("""14:35:39.910431 D| msgsnd_w_retry [dst task: COMMSINT, time: 31/10/2017 14:35:39.910]: Send msg to queue 76775432"""), True)
 
 
 if __name__ == '__main__':

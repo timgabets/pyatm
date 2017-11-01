@@ -33,5 +33,17 @@ def is_atm_message(trace_line):
   """
   if re.match("^\d{2}:\d{2}:\d{2}.\d{6} -\| [0-9A-F]{2}.*[ ]{7}.", trace_line):
     return True
-  else:
-    return False
+  
+  return False
+
+
+def is_host_message_sent(trace_line):
+  """
+  Detects whether the provided line looks like 
+  14:35:39.910431 D| msgsnd_w_retry [dst task: COMMSINT, time: 31/10/2017 14:35:39.910]: Send msg to queue 76775432
+  """
+
+  if re.match("^\d{2}:\d{2}:\d{2}.\d{6} .\| msgsnd_w_retry \[dst task: COMMSINT, time: \d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}.\d{3}]: Send msg to queue", trace_line):
+    return True
+
+  return False
